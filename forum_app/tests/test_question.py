@@ -6,7 +6,8 @@ from rest_framework.test import APITestCase, APIClient  # type: ignore
 from rest_framework import status  # type: ignore
 from rest_framework.utils.serializer_helpers import ReturnList, ReturnDict  # type: ignore
 from rest_framework.response import Response  # type: ignore
-from .models import Question
+from rest_framework.authtoken.models import Token # type: ignore
+from forum_app.models import Question
 from forum_app.api.serializers import QuestionSerializer
 from django.http import HttpResponse
 
@@ -51,11 +52,13 @@ class QuestionTests(APITestCase):
             username="Testuser", password="1234")
         self.question: Question = Question.objects.create(
             title="Test Question", content="Test Content", author=self.user, category="backend")
-
+        self.token = Token.objects.create(user=self.user)
+        
     def test_post_question(self) -> None:
         url: str = reverse('question-list')
         client = cast(APIClient, self.client)
-        client.login(username="Testuser",password="1234")
+        client.login(username="Testuser",password="1234") #nur ohne token-auth möglich
+        client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key) #type: ignore
         
         self.assertEqual(Question.objects.count(), 1)
         
@@ -69,8 +72,10 @@ class QuestionTests(APITestCase):
         
         response: HttpResponse = self.client.post(
             url, data={**mock_data, 'author': self.user.pk}, format="json")
-        
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        if self.token:
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        else:     #Token-Auth muss in den settings erst deaktiviert werden
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_question(self) -> None:
         url: str = reverse('question-detail', kwargs={'pk': self.question.pk})
