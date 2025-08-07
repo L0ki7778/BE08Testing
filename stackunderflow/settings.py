@@ -129,6 +129,21 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '2/day',
+        'user': '8/day',
+        'question': '100/day',
+        'question-get': '10/day',
+        'question-post': '2/day',
+        'question-put': '4/day',
+        'question-patch': '5/day',
+        'question-delete': '6/day',
+        'question-options': '2/day',
+    },
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
