@@ -1,5 +1,6 @@
-from rest_framework import viewsets, generics, permissions # type:ignore
+from rest_framework import viewsets, generics, permissions,filters # type:ignore
 from forum_app.models import Like, Question, Answer
+from django_filters.rest_framework import DjangoFilterBackend
 from typing import Any
 from .serializers import QuestionSerializer, AnswerSerializer, LikeSerializer
 from .permissions import IsOwnerOrAdmin, CustomQuestionPermission
@@ -25,22 +26,28 @@ class AnswerListCreateView(generics.ListCreateAPIView):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['author__username','content']
+    search_fields = ['content']
+    ordering_fields = ['content', 'author__username']
+    ordering = ['content']
+    
 
     def perform_create(self, serializer: AnswerSerializer):
         serializer.save(author=self.request.user) # type: ignore
         
-    def get_queryset(self):
-        queryset =  Answer.objects.all()
-        content_param = self.request.query_params.get('content',None)
+    # def get_queryset(self):
+    #     queryset =  Answer.objects.all()
+    #     content_param = self.request.query_params.get('content',None)
         
-        if content_param is not None:
-            queryset =queryset.filter(content__icontains=content_param)
+    #     if content_param is not None:
+    #         queryset =queryset.filter(content__icontains=content_param)
             
-        author_param = self.request.query_params.get('author',None)
-        if author_param is not None:
-            queryset= queryset.filter(author__username=author_param)
+    #     author_param = self.request.query_params.get('author',None)
+    #     if author_param is not None:
+    #         queryset= queryset.filter(author__username=author_param)
             
-        return queryset
+    #     return queryset
 
 class AnswerDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Answer.objects.all()
