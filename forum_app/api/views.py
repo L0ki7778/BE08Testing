@@ -1,10 +1,25 @@
 from rest_framework import viewsets, generics, permissions, filters, pagination  # type:ignore
 from forum_app.models import Like, Question, Answer
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend # type:ignore
 from typing import Any
 from .serializers import QuestionSerializer, AnswerSerializer, LikeSerializer
 from .permissions import IsOwnerOrAdmin, CustomQuestionPermission
 from .throttling import QuestionGetThrottle, QuestionPostThrottle
+
+
+from rest_framework.views import APIView # type:ignore
+from rest_framework.response import Response # type:ignore
+from rest_framework import status # type:ignore
+
+from .serializers import FileUploadSerializer
+
+class FileUploadView(APIView):
+    def post(self, request, format=None):  # type:ignore 
+        serializer = FileUploadSerializer(data=request.data)  # type:ignore
+        if serializer.is_valid():
+            serializer.save()  # type:ignore
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class QuestionViewSet(viewsets.ModelViewSet):
